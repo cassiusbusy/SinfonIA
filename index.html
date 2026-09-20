@@ -176,6 +176,49 @@
     color: var(--ink);
     white-space: pre-wrap;
   }
+  .best-specialist {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-soft);
+    background: var(--accent-soft);
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
+  .best-specialist strong { color: var(--ink); }
+
+  button.btn-secondary {
+    background: none;
+    color: var(--accent);
+    border: 1px solid var(--accent);
+    padding: 8px 14px;
+    font-size: 13.5px;
+  }
+  button.btn-secondary:hover { background: var(--accent-soft); opacity: 1; }
+
+  #especialistas-list { display: flex; flex-direction: column; gap: 10px; }
+  .especialista-item {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+  .especialista-item .nome-area {
+    font-size: 13.5px;
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .especialista-item .metricas {
+    font-size: 12px;
+    color: var(--ink-faint);
+  }
+  .especialista-item .texto {
+    font-size: 14px;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+    margin: 4px 0 0;
+  }
 
   #eval-card { border-left: 3px solid var(--ink-faint); }
   .row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
@@ -256,6 +299,9 @@
       <p class="eyebrow">Parecer técnico</p>
       <p class="answer-question" id="answer-question"></p>
       <p class="answer-text" id="answer-text"></p>
+      <p class="best-specialist" id="best-specialist" hidden></p>
+      <button id="btn-toggle-especialistas" class="btn-secondary" type="button" hidden>Ver respostas dos demais especialistas</button>
+      <div id="especialistas-list" hidden></div>
     </section>
 
     <section class="card" id="eval-card" hidden>
@@ -317,6 +363,54 @@
   });
   renderEstrelas();
 
+  function fmtNum(v) {
+    if (v === null || v === undefined || v === '') return '—';
+    const n = Number(v);
+    return Number.isFinite(n) ? n.toFixed(2) : String(v);
+  }
+
+  function renderEspecialistas(data) {
+    const melhor = data.melhor_especialista;
+    const especialistas = Array.isArray(data.especialistas) ? data.especialistas : [];
+
+    if (melhor && melhor.nome) {
+      $('best-specialist').innerHTML =
+        '🏅 Melhor contribuição: <strong>' + melhor.nome + '</strong>' +
+        (melhor.area_atuacao ? ' (' + melhor.area_atuacao + ')' : '') +
+        ' — confiança do contexto: ' + fmtNum(melhor.score_confianca_recuperacao) +
+        ' · temperatura: ' + fmtNum(melhor.temperatura);
+      $('best-specialist').hidden = false;
+    } else {
+      $('best-specialist').hidden = true;
+    }
+
+    if (especialistas.length > 0) {
+      $('especialistas-list').innerHTML = especialistas.map((e) =>
+        '<div class="especialista-item">' +
+          '<div class="nome-area">' + (e.nome || '—') + (e.area_atuacao ? ' · ' + e.area_atuacao : '') + '</div>' +
+          '<div class="metricas">confiança do contexto: ' + fmtNum(e.score_confianca_recuperacao) +
+          ' · temperatura: ' + fmtNum(e.temperatura) + '</div>' +
+          '<p class="texto">' + (e.texto || '') + '</p>' +
+        '</div>'
+      ).join('');
+      $('especialistas-list').hidden = true;
+      $('btn-toggle-especialistas').hidden = false;
+      $('btn-toggle-especialistas').textContent = 'Ver respostas dos demais especialistas';
+    } else {
+      $('btn-toggle-especialistas').hidden = true;
+      $('especialistas-list').hidden = true;
+      $('especialistas-list').innerHTML = '';
+    }
+  }
+
+  $('btn-toggle-especialistas').addEventListener('click', () => {
+    const list = $('especialistas-list');
+    list.hidden = !list.hidden;
+    $('btn-toggle-especialistas').textContent = list.hidden
+      ? 'Ver respostas dos demais especialistas'
+      : 'Ocultar respostas dos demais especialistas';
+  });
+
   $('btn-perguntar').addEventListener('click', async () => {
     const usuario_id = Number($('usuario').value);
     const pergunta = $('pergunta').value.trim();
@@ -326,6 +420,9 @@
     $('answer-card').hidden = true;
     $('eval-card').hidden = true;
     $('eval-thanks').hidden = true;
+    $('best-specialist').hidden = true;
+    $('btn-toggle-especialistas').hidden = true;
+    $('especialistas-list').hidden = true;
     $('status').hidden = false;
     $('btn-perguntar').disabled = true;
 
@@ -341,6 +438,7 @@
       $('answer-question').textContent = 'Pergunta: ' + (data.pergunta || pergunta);
       $('answer-text').textContent = data.resposta || '(sem resposta)';
       lastRespostaId = data.id_resposta ?? null;
+      renderEspecialistas(data);
 
       $('answer-card').hidden = false;
       $('eval-card').hidden = false;

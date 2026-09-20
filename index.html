@@ -1,0 +1,339 @@
+
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Painel de Urbanistas 2050</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F4F5F1;
+    --surface: #FFFFFF;
+    --ink: #16213A;
+    --ink-soft: #59626F;
+    --ink-faint: #8A929C;
+    --accent: #E1592A;
+    --accent-soft: #FCE7DD;
+    --border: #DBDED4;
+    --ok: #2F7D5A;
+    --ok-soft: #E4F3EB;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #10151F;
+      --surface: #171F2C;
+      --ink: #E9ECF1;
+      --ink-soft: #A6AFBC;
+      --ink-faint: #6D7684;
+      --accent: #FF7A45;
+      --accent-soft: #3A2418;
+      --border: #2A3242;
+      --ok: #6FCB9C;
+      --ok-soft: #16281F;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #10151F;
+    --surface: #171F2C;
+    --ink: #E9ECF1;
+    --ink-soft: #A6AFBC;
+    --ink-faint: #6D7684;
+    --accent: #FF7A45;
+    --accent-soft: #3A2418;
+    --border: #2A3242;
+    --ok: #6FCB9C;
+    --ok-soft: #16281F;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    padding: 40px 16px 64px;
+    line-height: 1.5;
+  }
+  .page {
+    max-width: 620px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  header {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-bottom: 4px;
+  }
+  .eyebrow {
+    font-family: "IBM Plex Sans", sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0;
+  }
+  h1 {
+    font-family: "Fraunces", Georgia, serif;
+    font-weight: 600;
+    font-size: clamp(28px, 6vw, 36px);
+    margin: 0;
+    text-wrap: balance;
+    color: var(--ink);
+  }
+  .subtitle {
+    margin: 0;
+    color: var(--ink-soft);
+    font-size: 15px;
+    max-width: 46ch;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink-soft);
+  }
+
+  select, textarea, input[type="number"] {
+    width: 100%;
+    font-family: inherit;
+    font-size: 15px;
+    color: var(--ink);
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    resize: vertical;
+  }
+  select:focus, textarea:focus, input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  button {
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    color: #fff;
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    padding: 11px 18px;
+    cursor: pointer;
+    align-self: flex-start;
+    transition: opacity 0.15s ease;
+  }
+  button:hover { opacity: 0.9; }
+  button:disabled { opacity: 0.5; cursor: default; }
+
+  #status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  .spinner {
+    width: 16px;
+    height: 16px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    flex: none;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  #answer-card {
+    border-left: 3px solid var(--accent);
+  }
+  .answer-question {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-faint);
+    font-style: italic;
+  }
+  .answer-text {
+    margin: 0;
+    font-size: 15.5px;
+    color: var(--ink);
+    white-space: pre-wrap;
+  }
+
+  #eval-card { border-left: 3px solid var(--ink-faint); }
+  .row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
+  .row > div { display: flex; flex-direction: column; gap: 6px; }
+  #nota { max-width: 100px; }
+
+  #eval-thanks {
+    margin: 0;
+    color: var(--ok);
+    background: var(--ok-soft);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .error {
+    border-left: 3px solid var(--accent);
+    background: var(--accent-soft);
+  }
+  .error p { margin: 0; color: var(--ink); font-size: 14px; }
+
+  footer {
+    text-align: center;
+    color: var(--ink-faint);
+    font-size: 12px;
+    padding-top: 8px;
+  }
+</style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <p class="eyebrow">OrquestraIA — MultipleBrains</p>
+      <h1>Painel de Urbanistas 2050</h1>
+      <p class="subtitle">Pergunte ao especialista e receba o parecer técnico do painel sobre a revisão do Plano Diretor de Curitiba.</p>
+    </header>
+
+    <section class="card" id="ask-card">
+      <div>
+        <label for="usuario">Você é</label>
+        <select id="usuario">
+          <option value="1">Comitê Painel Urbanistas 2050</option>
+          <option value="2" selected>Equipe Revisão do Plano Diretor</option>
+          <option value="3">Direção Acadêmica PPGCD</option>
+        </select>
+      </div>
+      <div>
+        <label for="pergunta">Sua pergunta</label>
+        <textarea id="pergunta" rows="4" placeholder="Ex.: qual a data em que ocorreu a primeira oficina da revisão do plano diretor?"></textarea>
+      </div>
+      <button id="btn-perguntar" type="button">Perguntar</button>
+      <div id="status" hidden>
+        <div class="spinner"></div>
+        <span id="status-text">Consultando o especialista — pode levar até um minuto…</span>
+      </div>
+    </section>
+
+    <section class="card" id="answer-card" hidden>
+      <p class="eyebrow">Parecer técnico</p>
+      <p class="answer-question" id="answer-question"></p>
+      <p class="answer-text" id="answer-text"></p>
+    </section>
+
+    <section class="card" id="eval-card" hidden>
+      <p class="eyebrow">Avaliação</p>
+      <div class="row">
+        <div>
+          <label for="nota">Nota (0–10)</label>
+          <input type="number" id="nota" min="0" max="10" step="1" value="8" />
+        </div>
+      </div>
+      <div>
+        <label for="comentario">Comentário (opcional)</label>
+        <textarea id="comentario" rows="2"></textarea>
+      </div>
+      <button id="btn-avaliar" type="button">Enviar avaliação</button>
+      <p id="eval-thanks" hidden>Obrigado! A avaliação foi registrada — o painel aprende com isso na próxima execução.</p>
+    </section>
+
+    <section class="card error" id="error-card" hidden>
+      <p id="error-text"></p>
+    </section>
+
+    <footer>OrquestraIA · camada de orquestração multi-agente do MultipleBrains</footer>
+  </div>
+
+<script>
+  // Troque pelos endereços reais do seu n8n antes de usar.
+  const ASK_URL = "https://longshore-gibson-unannoyed.ngrok-free.dev/webhook/12d7fe6b-2d98-4a02-8425-4eb7fb518a97";
+  const EVAL_URL = "https://longshore-gibson-unannoyed.ngrok-free.dev/webhook/orquestraia-avaliar";
+
+  const $ = (id) => document.getElementById(id);
+  let lastRespostaId = null;
+
+  function showError(msg) {
+    $('error-text').textContent = msg;
+    $('error-card').hidden = false;
+  }
+
+  $('btn-perguntar').addEventListener('click', async () => {
+    const usuario_id = Number($('usuario').value);
+    const pergunta = $('pergunta').value.trim();
+    if (!pergunta) return;
+
+    $('error-card').hidden = true;
+    $('answer-card').hidden = true;
+    $('eval-card').hidden = true;
+    $('eval-thanks').hidden = true;
+    $('status').hidden = false;
+    $('btn-perguntar').disabled = true;
+
+    try {
+      const res = await fetch(ASK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ usuario_id, pergunta })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      $('answer-question').textContent = 'Pergunta: ' + (data.pergunta || pergunta);
+      $('answer-text').textContent = data.resposta || '(sem resposta)';
+      lastRespostaId = data.id_resposta ?? null;
+
+      $('answer-card').hidden = false;
+      $('eval-card').hidden = false;
+    } catch (err) {
+      showError('Não foi possível obter a resposta (' + err.message + '). Pode ser timeout do servidor no meio do processamento — tenta de novo.');
+    } finally {
+      $('status').hidden = true;
+      $('btn-perguntar').disabled = false;
+    }
+  });
+
+  $('btn-avaliar').addEventListener('click', async () => {
+    const nota = Number($('nota').value);
+    const comentario = $('comentario').value.trim();
+    $('btn-avaliar').disabled = true;
+
+    try {
+      const res = await fetch(EVAL_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id_resposta: lastRespostaId,
+          nota,
+          comentario,
+          avaliado_por: 'Demonstração ao vivo'
+        })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      $('eval-thanks').hidden = false;
+    } catch (err) {
+      showError('Não foi possível registrar a avaliação (' + err.message + ').');
+    } finally {
+      $('btn-avaliar').disabled = false;
+    }
+  });
+</script>
+</body>
+</html>

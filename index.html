@@ -49,6 +49,7 @@
   }
 
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { margin: 0; padding: 0; }
   body {
     background: var(--bg);
@@ -179,7 +180,25 @@
   #eval-card { border-left: 3px solid var(--ink-faint); }
   .row { display: flex; gap: 12px; align-items: flex-end; flex-wrap: wrap; }
   .row > div { display: flex; flex-direction: column; gap: 6px; }
-  #nota { max-width: 100px; }
+
+  .stars { display: flex; gap: 4px; }
+  button.star {
+    background: none;
+    border: none;
+    color: var(--border);
+    padding: 0;
+    margin: 0;
+    font-size: 30px;
+    line-height: 1;
+    border-radius: 0;
+    align-self: auto;
+    cursor: pointer;
+    transition: color 0.1s ease, transform 0.1s ease;
+  }
+  button.star:hover { transform: scale(1.12); }
+  button.star.filled { color: var(--accent); }
+  button.star:focus { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #nota-label { font-size: 13px; color: var(--ink-soft); }
 
   #eval-thanks {
     margin: 0;
@@ -243,8 +262,15 @@
       <p class="eyebrow">Avaliação</p>
       <div class="row">
         <div>
-          <label for="nota">Nota (0–10)</label>
-          <input type="number" id="nota" min="0" max="10" step="1" value="8" />
+          <label id="nota-label-heading">Nota</label>
+          <div class="stars" id="stars" role="radiogroup" aria-label="Nota de 0 a 10">
+            <button type="button" class="star" data-value="1" aria-label="2 pontos">★</button>
+            <button type="button" class="star" data-value="2" aria-label="4 pontos">★</button>
+            <button type="button" class="star" data-value="3" aria-label="6 pontos">★</button>
+            <button type="button" class="star" data-value="4" aria-label="8 pontos">★</button>
+            <button type="button" class="star" data-value="5" aria-label="10 pontos">★</button>
+          </div>
+          <span id="nota-label">8 / 10</span>
         </div>
       </div>
       <div>
@@ -263,17 +289,33 @@
   </div>
 
 <script>
-  // Troque pelos endereços reais do seu n8n antes de usar.
   const ASK_URL = "https://longshore-gibson-unannoyed.ngrok-free.dev/webhook/12d7fe6b-2d98-4a02-8425-4eb7fb518a97";
   const EVAL_URL = "https://longshore-gibson-unannoyed.ngrok-free.dev/webhook/orquestraia-avaliar";
 
   const $ = (id) => document.getElementById(id);
   let lastRespostaId = null;
+  let notaEstrelas = 4; // 1-5 estrelas -> nota 2-10
 
   function showError(msg) {
     $('error-text').textContent = msg;
     $('error-card').hidden = false;
   }
+
+  function renderEstrelas() {
+    document.querySelectorAll('#stars .star').forEach((btn) => {
+      const v = Number(btn.dataset.value);
+      btn.classList.toggle('filled', v <= notaEstrelas);
+    });
+    $('nota-label').textContent = (notaEstrelas * 2) + ' / 10';
+  }
+
+  document.querySelectorAll('#stars .star').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      notaEstrelas = Number(btn.dataset.value);
+      renderEstrelas();
+    });
+  });
+  renderEstrelas();
 
   $('btn-perguntar').addEventListener('click', async () => {
     const usuario_id = Number($('usuario').value);
@@ -311,7 +353,7 @@
   });
 
   $('btn-avaliar').addEventListener('click', async () => {
-    const nota = Number($('nota').value);
+    const nota = notaEstrelas * 2;
     const comentario = $('comentario').value.trim();
     $('btn-avaliar').disabled = true;
 

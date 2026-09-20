@@ -105,6 +105,70 @@
     gap: 14px;
   }
 
+  .tabs {
+    display: flex;
+    gap: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  button.tab {
+    background: none;
+    color: var(--ink-soft);
+    border: none;
+    border-radius: 0;
+    padding: 10px 4px;
+    margin-bottom: -1px;
+    border-bottom: 2px solid transparent;
+    font-size: 14px;
+  }
+  button.tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+  button.tab:hover { opacity: 1; }
+
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  button.chip {
+    background: var(--bg);
+    color: var(--ink-soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 7px 13px;
+    font-size: 12.5px;
+    font-weight: 500;
+  }
+  button.chip:hover { background: var(--accent-soft); color: var(--ink); opacity: 1; }
+
+  .sql-box {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 10px 12px;
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12.5px;
+    color: var(--ink-soft);
+    white-space: pre-wrap;
+    word-break: break-word;
+    margin: 0;
+  }
+
+  .rows-table-wrap { overflow-x: auto; }
+  table.rows-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-size: 12.5px;
+  }
+  table.rows-table th, table.rows-table td {
+    border: 1px solid var(--border);
+    padding: 6px 8px;
+    text-align: left;
+    white-space: nowrap;
+  }
+  table.rows-table th {
+    background: var(--bg);
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+
   label {
     font-size: 13px;
     font-weight: 600;
@@ -143,7 +207,7 @@
   button:hover { opacity: 0.9; }
   button:disabled { opacity: 0.5; cursor: default; }
 
-  #status {
+  #status, #banco-status {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -272,9 +336,15 @@
     <header>
       <p class="eyebrow">OrquestraIA — MultipleBrains</p>
       <h1>Painel de Urbanistas 2050</h1>
-      <p class="subtitle">Pergunte ao especialista e receba o parecer técnico do painel sobre a revisão do Plano Diretor de Curitiba.</p>
+      <p class="subtitle" id="page-subtitle">Pergunte ao especialista e receba o parecer técnico do painel sobre a revisão do Plano Diretor de Curitiba.</p>
     </header>
 
+    <nav class="tabs">
+      <button type="button" class="tab active" id="tab-btn-painel">Painel de Urbanistas</button>
+      <button type="button" class="tab" id="tab-btn-banco">Pergunte ao banco</button>
+    </nav>
+
+    <div id="tab-painel">
     <section class="card" id="ask-card">
       <div>
         <label for="usuario">Você é</label>
@@ -330,6 +400,48 @@
     <section class="card error" id="error-card" hidden>
       <p id="error-text"></p>
     </section>
+    </div>
+
+    <div id="tab-banco" hidden>
+      <section class="card" id="banco-ask-card">
+        <div>
+          <label>Perguntas rápidas</label>
+          <div class="chips" id="banco-chips">
+            <button type="button" class="chip" data-q="Quantas execuções aconteceram hoje?">Execuções hoje</button>
+            <button type="button" class="chip" data-q="Qual especialista tem a melhor nota média de avaliação?">Melhor especialista (nota)</button>
+            <button type="button" class="chip" data-q="Qual foi o custo total gasto em todas as execuções até agora?">Custo total</button>
+            <button type="button" class="chip" data-q="Quantas respostas cada especialista já deu?">Respostas por especialista</button>
+            <button type="button" class="chip" data-q="Quais são as 5 perguntas mais recentes feitas ao painel?">Últimas perguntas</button>
+            <button type="button" class="chip" data-q="Quantas execuções ainda estão em andamento ou falharam?">Execuções em andamento/falha</button>
+          </div>
+        </div>
+        <div>
+          <label for="banco-pergunta">Ou pergunte com suas palavras</label>
+          <textarea id="banco-pergunta" rows="3" placeholder="Ex.: qual especialista foi acionado com mais frequência este mês?"></textarea>
+        </div>
+        <button id="btn-banco-perguntar" type="button">Perguntar ao banco</button>
+        <div id="banco-status" hidden>
+          <div class="spinner"></div>
+          <span>Consultando o banco de dados…</span>
+        </div>
+      </section>
+
+      <section class="card" id="banco-answer-card" hidden>
+        <p class="eyebrow">Resposta</p>
+        <p class="answer-question" id="banco-answer-question"></p>
+        <p class="answer-text" id="banco-answer-text"></p>
+        <div>
+          <label>Consulta SQL gerada pela IA</label>
+          <pre class="sql-box" id="banco-sql"></pre>
+        </div>
+        <button id="btn-toggle-linhas" class="btn-secondary" type="button" hidden>Ver linhas retornadas</button>
+        <div class="rows-table-wrap" id="banco-rows-wrap" hidden></div>
+      </section>
+
+      <section class="card error" id="banco-error-card" hidden>
+        <p id="banco-error-text"></p>
+      </section>
+    </div>
 
     <footer>OrquestraIA · camada de orquestração multi-agente do MultipleBrains</footer>
   </div>
@@ -337,6 +449,7 @@
 <script>
   const ASK_URL = "https://longshore-gibson-unannoyed.ngrok-free.dev/webhook/12d7fe6b-2d98-4a02-8425-4eb7fb518a97";
   const EVAL_URL = "https://longshore-gibson-unannoyed.ngrok-free.dev/webhook/orquestraia-avaliar";
+  const DB_URL = "https://longshore-gibson-unannoyed.ngrok-free.dev/webhook/orquestraia-perguntar-banco";
 
   const $ = (id) => document.getElementById(id);
   let lastRespostaId = null;
@@ -474,6 +587,95 @@
       $('btn-avaliar').disabled = false;
     }
   });
+
+  // ---------- Abas ----------
+  function mostrarAba(aba) {
+    const noPainel = aba === 'painel';
+    $('tab-painel').hidden = !noPainel;
+    $('tab-banco').hidden = noPainel;
+    $('tab-btn-painel').classList.toggle('active', noPainel);
+    $('tab-btn-banco').classList.toggle('active', !noPainel);
+    $('page-subtitle').textContent = noPainel
+      ? 'Pergunte ao especialista e receba o parecer técnico do painel sobre a revisão do Plano Diretor de Curitiba.'
+      : 'Pergunte, em português, o que está acontecendo (ou já aconteceu) no banco de dados do OrquestraIA.';
+  }
+  $('tab-btn-painel').addEventListener('click', () => mostrarAba('painel'));
+  $('tab-btn-banco').addEventListener('click', () => mostrarAba('banco'));
+
+  // ---------- Pergunte ao banco ----------
+  function showBancoError(msg) {
+    $('banco-error-text').textContent = msg;
+    $('banco-error-card').hidden = false;
+  }
+
+  document.querySelectorAll('#banco-chips .chip').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      $('banco-pergunta').value = btn.dataset.q;
+      perguntarAoBanco(btn.dataset.q);
+    });
+  });
+
+  $('btn-toggle-linhas').addEventListener('click', () => {
+    const wrap = $('banco-rows-wrap');
+    wrap.hidden = !wrap.hidden;
+    $('btn-toggle-linhas').textContent = wrap.hidden ? 'Ver linhas retornadas' : 'Ocultar linhas retornadas';
+  });
+
+  function renderTabelaLinhas(linhas) {
+    if (!Array.isArray(linhas) || linhas.length === 0) {
+      $('btn-toggle-linhas').hidden = true;
+      $('banco-rows-wrap').hidden = true;
+      $('banco-rows-wrap').innerHTML = '';
+      return;
+    }
+    const colunas = Object.keys(linhas[0]);
+    const thead = '<tr>' + colunas.map((c) => '<th>' + c + '</th>').join('') + '</tr>';
+    const tbody = linhas.map((l) =>
+      '<tr>' + colunas.map((c) => '<td>' + (l[c] ?? '') + '</td>').join('') + '</tr>'
+    ).join('');
+    $('banco-rows-wrap').innerHTML = '<table class="rows-table"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table>';
+    $('banco-rows-wrap').hidden = true;
+    $('btn-toggle-linhas').hidden = false;
+    $('btn-toggle-linhas').textContent = 'Ver linhas retornadas';
+  }
+
+  async function perguntarAoBanco(perguntaForcada) {
+    const pergunta = (perguntaForcada || $('banco-pergunta').value).trim();
+    if (!pergunta) return;
+
+    $('banco-error-card').hidden = true;
+    $('banco-answer-card').hidden = true;
+    $('banco-status').hidden = false;
+    $('btn-banco-perguntar').disabled = true;
+
+    try {
+      const res = await fetch(DB_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
+        body: JSON.stringify({ pergunta })
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+
+      if (data.erro) {
+        showBancoError(data.erro + (data.sql ? ' (SQL tentada: ' + data.sql + ')' : ''));
+        return;
+      }
+
+      $('banco-answer-question').textContent = 'Pergunta: ' + (data.pergunta || pergunta);
+      $('banco-answer-text').textContent = data.resposta || '(sem resposta)';
+      $('banco-sql').textContent = data.sql || '(sem SQL)';
+      renderTabelaLinhas(data.linhas);
+      $('banco-answer-card').hidden = false;
+    } catch (err) {
+      showBancoError('Não foi possível consultar o banco (' + err.message + ').');
+    } finally {
+      $('banco-status').hidden = true;
+      $('btn-banco-perguntar').disabled = false;
+    }
+  }
+
+  $('btn-banco-perguntar').addEventListener('click', () => perguntarAoBanco());
 </script>
 </body>
 </html>

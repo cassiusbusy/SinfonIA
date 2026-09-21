@@ -416,6 +416,17 @@
           </div>
         </div>
         <div>
+          <label>Perguntas para a arguição</label>
+          <div class="chips" id="banco-chips-arguicao">
+            <button type="button" class="chip" data-q="Qual é o tempo médio, em dias, entre a resposta ser gerada e receber uma avaliação humana?">Lead time até avaliação</button>
+            <button type="button" class="chip" data-q="Qual especialista tem o menor custo médio por resposta?">Especialista mais econômico</button>
+            <button type="button" class="chip" data-q="Quantas respostas são síntese do orquestrador e quantas são de especialistas individuais?">Síntese vs. especialista</button>
+            <button type="button" class="chip" data-q="Qual a diferença entre a nota média das avaliações humanas e das avaliações automáticas?">Nota humana vs. automática</button>
+            <button type="button" class="chip" data-q="Existe alguma resposta que ainda não recebeu avaliação?">Respostas sem avaliação</button>
+            <button type="button" class="chip" data-q="Qual foi a relação entre a temperatura usada e a nota recebida nas respostas dos especialistas?">Temperatura vs. nota</button>
+          </div>
+        </div>
+        <div>
           <label for="banco-pergunta">Ou pergunte com suas palavras</label>
           <textarea id="banco-pergunta" rows="3" placeholder="Ex.: qual especialista foi acionado com mais frequência este mês?"></textarea>
         </div>
@@ -476,6 +487,18 @@
   });
   renderEstrelas();
 
+  // Escapa qualquer conteúdo vindo do banco/LLM antes de injetar via innerHTML.
+  // Necessário porque campos como execucao.pergunta, avaliacao.comentario e o
+  // texto gerado pelos especialistas são texto livre e podem conter HTML/script
+  // (seja de um usuário mal-intencionado, seja de uma resposta de LLM manipulada
+  // por prompt injection). Sem isso, esse conteúdo seria executado no navegador
+  // de quem visualizar depois (XSS armazenado).
+  function escapeHtml(v) {
+    return String(v ?? '').replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[c]));
+  }
+
   function fmtNum(v) {
     if (v === null || v === undefined || v === '') return '—';
     const n = Number(v);
@@ -488,8 +511,8 @@
 
     if (melhor && melhor.nome) {
       $('best-specialist').innerHTML =
-        '🏅 Melhor contribuição: <strong>' + melhor.nome + '</strong>' +
-        (melhor.area_atuacao ? ' (' + melhor.area_atuacao + ')' : '') +
+        '🏅 Melhor contribuição: <strong>' + escapeHtml(melhor.nome) + '</strong>' +
+        (melhor.area_atuacao ? ' (' + escapeHtml(melhor.area_atuacao) + ')' : '') +
         ' — confiança do contexto: ' + fmtNum(melhor.score_confianca_recuperacao) +
         ' · temperatura: ' + fmtNum(melhor.temperatura);
       $('best-specialist').hidden = false;
@@ -500,10 +523,10 @@
     if (especialistas.length > 0) {
       $('especialistas-list').innerHTML = especialistas.map((e) =>
         '<div class="especialista-item">' +
-          '<div class="nome-area">' + (e.nome || '—') + (e.area_atuacao ? ' · ' + e.area_atuacao : '') + '</div>' +
+          '<div class="nome-area">' + escapeHtml(e.nome || '—') + (e.area_atuacao ? ' · ' + escapeHtml(e.area_atuacao) : '') + '</div>' +
           '<div class="metricas">confiança do contexto: ' + fmtNum(e.score_confianca_recuperacao) +
           ' · temperatura: ' + fmtNum(e.temperatura) + '</div>' +
-          '<p class="texto">' + (e.texto || '') + '</p>' +
+          '<p class="texto">' + escapeHtml(e.texto || '') + '</p>' +
         '</div>'
       ).join('');
       $('especialistas-list').hidden = true;
@@ -608,7 +631,7 @@
     $('banco-error-card').hidden = false;
   }
 
-  document.querySelectorAll('#banco-chips .chip').forEach((btn) => {
+  document.querySelectorAll('#banco-chips .chip, #banco-chips-arguicao .chip').forEach((btn) => {
     btn.addEventListener('click', () => {
       $('banco-pergunta').value = btn.dataset.q;
       perguntarAoBanco(btn.dataset.q);
@@ -629,9 +652,9 @@
       return;
     }
     const colunas = Object.keys(linhas[0]);
-    const thead = '<tr>' + colunas.map((c) => '<th>' + c + '</th>').join('') + '</tr>';
+    const thead = '<tr>' + colunas.map((c) => '<th>' + escapeHtml(c) + '</th>').join('') + '</tr>';
     const tbody = linhas.map((l) =>
-      '<tr>' + colunas.map((c) => '<td>' + (l[c] ?? '') + '</td>').join('') + '</tr>'
+      '<tr>' + colunas.map((c) => '<td>' + escapeHtml(l[c]) + '</td>').join('') + '</tr>'
     ).join('');
     $('banco-rows-wrap').innerHTML = '<table class="rows-table"><thead>' + thead + '</thead><tbody>' + tbody + '</tbody></table>';
     $('banco-rows-wrap').hidden = true;

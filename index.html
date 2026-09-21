@@ -249,6 +249,10 @@
     padding: 8px 12px;
   }
   .best-specialist strong { color: var(--ink); }
+  .best-specialist.low-relevance {
+    background: rgba(89, 98, 111, 0.14);
+    color: var(--ink-soft);
+  }
 
   button.btn-secondary {
     background: none;
@@ -509,15 +513,28 @@
     const melhor = data.melhor_especialista;
     const especialistas = Array.isArray(data.especialistas) ? data.especialistas : [];
 
-    if (melhor && melhor.nome) {
-      $('best-specialist').innerHTML =
-        '🏅 Melhor contribuição: <strong>' + escapeHtml(melhor.nome) + '</strong>' +
+    const badge = $('best-specialist');
+    if (data.baixa_relevancia) {
+      // Nenhum especialista achou contexto com confiança suficiente: deixa claro
+      // que o texto acima foi elaborado pelo orquestrador (conhecimento geral do
+      // modelo), não extraído de um especialista específico.
+      badge.className = 'best-specialist low-relevance';
+      badge.innerHTML =
+        '⚠️ Resposta gerada pelo orquestrador — nenhum especialista encontrou contexto com relevância suficiente para essa pergunta' +
+        (melhor && melhor.nome
+          ? ' (maior confiança: ' + escapeHtml(melhor.nome) + ' · ' + fmtNum(melhor.score_confianca_recuperacao) + ')'
+          : '');
+      badge.hidden = false;
+    } else if (melhor && melhor.nome) {
+      badge.className = 'best-specialist';
+      badge.innerHTML =
+        '🏅 Especialista com maior confiança de contexto: <strong>' + escapeHtml(melhor.nome) + '</strong>' +
         (melhor.area_atuacao ? ' (' + escapeHtml(melhor.area_atuacao) + ')' : '') +
         ' — confiança do contexto: ' + fmtNum(melhor.score_confianca_recuperacao) +
         ' · temperatura: ' + fmtNum(melhor.temperatura);
-      $('best-specialist').hidden = false;
+      badge.hidden = false;
     } else {
-      $('best-specialist').hidden = true;
+      badge.hidden = true;
     }
 
     if (especialistas.length > 0) {

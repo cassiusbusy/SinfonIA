@@ -126,6 +126,30 @@
   }
   button.tab:hover { opacity: 1; }
 
+  .metodo-row { display: flex; flex-direction: column; gap: 6px; }
+  .metodo-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+  button.metodo-btn {
+    background: var(--bg);
+    color: var(--ink-soft);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: 600;
+    align-self: auto;
+  }
+  button.metodo-btn.active {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+  }
+  button.metodo-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+  .metodo-hint {
+    font-size: 12px;
+    color: var(--ink-soft);
+    margin: 0;
+  }
+
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
   button.chip {
     background: var(--bg);
@@ -358,6 +382,15 @@
           <option value="3">Direção Acadêmica PPGCD</option>
         </select>
       </div>
+      <div class="metodo-row">
+        <label>Método de orquestração</label>
+        <div class="metodo-buttons">
+          <button type="button" class="metodo-btn active" id="btn-metodo-moa" data-metodo="moa">MoA (especialistas + síntese)</button>
+          <button type="button" class="metodo-btn" id="btn-metodo-delphi" data-metodo="delphi">Policy Delphi</button>
+          <button type="button" class="metodo-btn" id="btn-metodo-mad" data-metodo="mad">MAD (debate)</button>
+        </div>
+        <p class="metodo-hint" id="metodo-hint" hidden></p>
+      </div>
       <div>
         <label for="pergunta">Sua pergunta</label>
         <textarea id="pergunta" rows="4" placeholder="Ex.: qual a data em que ocorreu a primeira oficina da revisão do plano diretor?"></textarea>
@@ -466,6 +499,22 @@
   const EVAL_URL = "https://longshore-gibson-unannoyed.ngrok-free.dev/webhook/orquestraia-avaliar";
   const DB_URL = "https://longshore-gibson-unannoyed.ngrok-free.dev/webhook/orquestraia-perguntar-banco";
 
+  // ---------- Métodos de orquestração (MoA / Policy Delphi / MAD) ----------
+  // Habilite cada método (true) só depois de importar e ativar o workflow
+  // correspondente no seu n8n e substituir a URL abaixo pela URL real do
+  // webhook (o path já sai pronto de gerar_n8n_workflows_delphi_mad.py:
+  // "orquestraia-delphi" e "orquestraia-mad"). Enquanto ficar em "false",
+  // o botão aparece desabilitado no painel — assim dá pra ir liberando um
+  // método de cada vez, conforme for testando no seu ambiente.
+  const METODOS_PRONTOS = { moa: true, delphi: false, mad: false };
+  const METODO_URLS = {
+    moa: ASK_URL,
+    delphi: "https://longshore-gibson-unannoyed.ngrok-free.dev/webhook/orquestraia-delphi",
+    mad: "https://longshore-gibson-unannoyed.ngrok-free.dev/webhook/orquestraia-mad"
+  };
+  const METODO_LABEL = { moa: 'MoA', delphi: 'Policy Delphi', mad: 'MAD (debate)' };
+  let metodoAtual = 'moa';
+
   const $ = (id) => document.getElementById(id);
   let lastRespostaId = null;
   let notaEstrelas = 4; // 1-5 estrelas -> nota 2-10
@@ -564,10 +613,40 @@
       : 'Ocultar respostas dos demais especialistas';
   });
 
+  // ---------- Seleção do método (MoA / Delphi / MAD) ----------
+  function atualizarBotoesMetodo() {
+    document.querySelectorAll('.metodo-btn').forEach((btn) => {
+      const m = btn.dataset.metodo;
+      const pronto = !!METODOS_PRONTOS[m];
+      btn.disabled = !pronto;
+      btn.classList.toggle('active', m === metodoAtual);
+      btn.title = pronto ? '' : 'Ainda não disponível nesta demonstração — workflow em preparação no n8n';
+    });
+    const hint = $('metodo-hint');
+    if (!METODOS_PRONTOS[metodoAtual]) {
+      hint.hidden = false;
+      hint.textContent = 'Método selecionado ainda não está habilitado.';
+    } else if (metodoAtual !== 'moa') {
+      hint.hidden = false;
+      hint.textContent = METODO_LABEL[metodoAtual] + ' roda em 2 rodadas entre os especialistas — pode levar mais tempo que o MoA.';
+    } else {
+      hint.hidden = true;
+    }
+  }
+  document.querySelectorAll('.metodo-btn').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      if (!METODOS_PRONTOS[btn.dataset.metodo]) return;
+      metodoAtual = btn.dataset.metodo;
+      atualizarBotoesMetodo();
+    });
+  });
+  atualizarBotoesMetodo();
+
   $('btn-perguntar').addEventListener('click', async () => {
     const usuario_id = Number($('usuario').value);
     const pergunta = $('pergunta').value.trim();
     if (!pergunta) return;
+    if (!METODOS_PRONTOS[metodoAtual]) { showError('Este método ainda não está habilitado.'); return; }
 
     $('error-card').hidden = true;
     $('answer-card').hidden = true;
@@ -577,24 +656,41 @@
     $('btn-toggle-especialistas').hidden = true;
     $('especialistas-list').hidden = true;
     $('status').hidden = false;
+    $('status-text').textContent = metodoAtual === 'moa'
+      ? 'Consultando os especialistas — pode levar até um minuto…'
+      : 'Rodando ' + METODO_LABEL[metodoAtual] + ' (2 rodadas entre especialistas) — pode levar alguns minutos…';
     $('btn-perguntar').disabled = true;
 
     try {
-      const res = await fetch(ASK_URL, {
+      const res = await fetch(METODO_URLS[metodoAtual], {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'ngrok-skip-browser-warning': 'true' },
-        body: JSON.stringify({ usuario_id, pergunta })
+        body: JSON.stringify({ usuario_id, pergunta, metodo: metodoAtual })
       });
       if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
 
-      $('answer-question').textContent = 'Pergunta: ' + (data.pergunta || pergunta);
-      $('answer-text').textContent = data.resposta || '(sem resposta)';
-      lastRespostaId = data.id_resposta ?? null;
-      renderEspecialistas(data);
+      if (metodoAtual === 'moa') {
+        $('answer-question').textContent = 'Pergunta: ' + (data.pergunta || pergunta);
+        $('answer-text').textContent = data.resposta || '(sem resposta)';
+        lastRespostaId = data.id_resposta ?? null;
+        renderEspecialistas(data);
+        $('eval-card').hidden = false;
+      } else {
+        // Delphi/MAD devolvem uma síntese após 2 rodadas, não uma resposta por
+        // especialista — reaproveita o mesmo card, mas sem a lista de especialistas
+        // e (por ora) sem avaliação por estrelas, já que a síntese não está ligada
+        // a um único id_resposta na UI (fica registrada no banco mesmo assim).
+        $('answer-question').textContent = 'Pergunta (' + METODO_LABEL[metodoAtual] + '): ' + pergunta;
+        $('answer-text').textContent = data.sintese || '(sem síntese)';
+        if (data.pontos_divergencia) {
+          $('best-specialist').hidden = false;
+          $('best-specialist').textContent = 'Pontos de divergência que persistiram: ' + data.pontos_divergencia;
+        }
+        lastRespostaId = null;
+      }
 
       $('answer-card').hidden = false;
-      $('eval-card').hidden = false;
     } catch (err) {
       showError('Não foi possível obter a resposta (' + err.message + '). Pode ser timeout do servidor no meio do processamento — tenta de novo.');
     } finally {

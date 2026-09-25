@@ -129,7 +129,9 @@
   .metodo-row { display: flex; flex-direction: column; gap: 6px; }
   .metodo-buttons { display: flex; flex-wrap: wrap; gap: 8px; }
   .metodo-chip {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     background: var(--bg);
     color: var(--ink-soft);
     border: 1px solid var(--border);
@@ -137,6 +139,15 @@
     padding: 8px 16px;
     font-size: 13px;
     font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+    transition: opacity .15s, transform .1s;
+  }
+  .metodo-chip:hover { opacity: 0.85; }
+  .metodo-chip:active { transform: scale(0.97); }
+  .metodo-chip .dot {
+    width: 8px; height: 8px; border-radius: 50%;
+    background: currentColor; opacity: 0.6; flex: none;
   }
   .metodo-chip.pronto {
     background: var(--accent);
@@ -385,7 +396,7 @@
       <div class="metodo-row">
         <label>Métodos disparados por pergunta</label>
         <div class="metodo-buttons" id="metodo-chips"></div>
-        <p class="metodo-hint">Uma única pergunta é enviada de uma vez para todos os métodos já habilitados abaixo — cada um responde no seu próprio card, assim que terminar (não é preciso escolher um só).</p>
+        <p class="metodo-hint">Uma única pergunta é enviada de uma vez para todos os métodos habilitados abaixo — cada um responde no seu próprio card, assim que terminar (não é preciso escolher um só). Clique em um método para habilitar/desabilitar; a escolha fica salva neste navegador.</p>
       </div>
       <div>
         <label for="pergunta">Sua pergunta</label>
@@ -500,19 +511,37 @@
   // ---------- Métodos de orquestração (MoA / Policy Delphi / MAD) ----------
   // A ideia da página é: UMA pergunta é disparada, em paralelo, para TODOS os
   // métodos abaixo marcados como "true" — não é um seletor de "escolha um".
-  // Habilite cada método (true) só depois de importar e ativar o workflow
-  // correspondente no seu n8n e substituir a URL abaixo pela URL real do
-  // webhook (o path já sai pronto de gerar_n8n_workflows_delphi_mad.py:
-  // "orquestraia-delphi" e "orquestraia-mad"). Enquanto ficar em "false", esse
-  // método simplesmente não é chamado ainda (aparece esmaecido no painel) —
-  // assim dá pra ir ligando um método de cada vez, conforme for testando.
-  const METODOS_PRONTOS = { moa: true, delphi: false, mad: false };
+  // Cada chip abaixo do campo de pergunta é clicável: clicar liga/desliga
+  // aquele método (o estado fica salvo no localStorage do navegador, então
+  // sobrevive a recarregar a página). Só ligue Delphi/MAD depois de importar
+  // e ativar o workflow correspondente no seu n8n (os paths já saem prontos
+  // de gerar_n8n_workflows_delphi_mad.py: "orquestraia-delphi" e
+  // "orquestraia-mad") — se ligar antes disso, a pergunta é enviada mas o
+  // n8n não vai responder (erro/timeout no card daquele método).
+  const METODOS_PRONTOS_PADRAO = { moa: true, delphi: false, mad: false };
   const METODO_URLS = {
     moa: ASK_URL,
     delphi: "https://longshore-gibson-unannoyed.ngrok-free.dev/webhook/orquestraia-delphi",
     mad: "https://longshore-gibson-unannoyed.ngrok-free.dev/webhook/orquestraia-mad"
   };
   const METODO_LABEL = { moa: 'MoA', delphi: 'Policy Delphi', mad: 'MAD (debate)' };
+
+  function carregarMetodosProntos() {
+    try {
+      const salvo = JSON.parse(localStorage.getItem('metodos_prontos') || 'null');
+      if (salvo && typeof salvo === 'object') {
+        return { ...METODOS_PRONTOS_PADRAO, ...salvo };
+      }
+    } catch (e) { /* localStorage indisponível ou valor corrompido: usa padrão */ }
+    return { ...METODOS_PRONTOS_PADRAO };
+  }
+
+  function salvarMetodosProntos() {
+    try { localStorage.setItem('metodos_prontos', JSON.stringify(METODOS_PRONTOS)); }
+    catch (e) { /* ambiente sem localStorage: estado só dura a sessão atual */ }
+  }
+
+  const METODOS_PRONTOS = carregarMetodosProntos();
 
   const $ = (id) => document.getElementById(id);
   let lastRespostaId = null;
@@ -612,15 +641,26 @@
       : 'Ocultar respostas dos demais especialistas';
   });
 
-  // ---------- Status dos métodos (só indicadores — não são um seletor) ----------
+  // ---------- Status dos métodos — chips clicáveis, não um seletor de "escolha um" ----------
+  // Clicar num chip liga/desliga aquele método (não troca "qual método está ativo":
+  // todos os ligados disparam juntos quando a pergunta é enviada).
   function renderMetodoChips() {
     const wrap = $('metodo-chips');
     wrap.innerHTML = '';
     Object.keys(METODO_LABEL).forEach((m) => {
       const pronto = !!METODOS_PRONTOS[m];
-      const chip = document.createElement('span');
+      const chip = document.createElement('button');
+      chip.type = 'button';
       chip.className = 'metodo-chip ' + (pronto ? 'pronto' : 'pendente');
-      chip.textContent = METODO_LABEL[m] + (pronto ? '' : ' (em preparação)');
+      chip.title = pronto
+        ? 'Habilitado — clique para desabilitar'
+        : 'Desabilitado — clique para habilitar (só depois do workflow estar importado e ativo no n8n)';
+      chip.innerHTML = '<span class="dot"></span>' + METODO_LABEL[m] + (pronto ? '' : ' (desabilitado)');
+      chip.addEventListener('click', () => {
+        METODOS_PRONTOS[m] = !METODOS_PRONTOS[m];
+        salvarMetodosProntos();
+        renderMetodoChips();
+      });
       wrap.appendChild(chip);
     });
   }

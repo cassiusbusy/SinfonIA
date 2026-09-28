@@ -288,6 +288,14 @@
     background: rgba(89, 98, 111, 0.14);
     color: var(--ink-soft);
   }
+  .matriz-decisao {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-soft);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+  }
 
   button.btn-secondary {
     background: none;
@@ -321,6 +329,11 @@
     color: var(--ink-soft);
     white-space: pre-wrap;
     margin: 4px 0 0;
+  }
+  .especialista-item .escala-item {
+    font-size: 12px;
+    color: var(--ink-faint);
+    margin-top: 2px;
   }
 
   .btn-toggle-rodadas { margin-top: 4px; }
@@ -716,6 +729,7 @@
       '<p class="answer-question">Pergunta: ' + pergunta.replace(/</g, '&lt;') + '</p>' +
       '<p class="answer-text">Consultando — ' + METODO_LABEL[metodo] + ' roda em 2 rodadas, pode levar alguns minutos…</p>' +
       '<p class="best-specialist" hidden></p>' +
+      '<p class="matriz-decisao" hidden></p>' +
       '<button class="btn-secondary btn-toggle-rodadas" type="button" hidden>Ver rodadas completas</button>' +
       '<div class="rodadas-detalhe" hidden></div>';
     $('answers-extra').appendChild(div);
@@ -727,10 +741,18 @@
     const r2 = Array.isArray(data.respostas_r2) ? data.respostas_r2 : [];
     if (r1.length === 0 && r2.length === 0) return; // nada pra mostrar (execução antiga, sem esses campos)
 
+    // desejabilidade/exequibilidade só existem em execuções depois da migração
+    // 'add_desejabilidade_exequibilidade_resposta' — por isso o cheque de null/undefined
+    // (execuções antigas simplesmente não mostram essa linha, sem quebrar o card).
+    const escalaTexto = (e) => (e.desejabilidade == null && e.exequibilidade == null) ? '' :
+      '<div class="escala-item">Desejabilidade: ' + escapeHtml(String(e.desejabilidade ?? '—')) +
+      ' · Exequibilidade: ' + escapeHtml(String(e.exequibilidade ?? '—')) + '</div>';
+
     const listaEspecialistas = (lista) => lista.map((e) =>
       '<div class="especialista-item">' +
         '<div class="nome-area">' + escapeHtml(e.nome || '—') + (e.area_atuacao ? ' · ' + escapeHtml(e.area_atuacao) : '') + '</div>' +
         '<div class="texto">' + escapeHtml(e.texto || '') + '</div>' +
+        escalaTexto(e) +
       '</div>'
     ).join('');
 
@@ -801,6 +823,16 @@
             const bs = card.querySelector('.best-specialist');
             bs.hidden = false;
             bs.textContent = 'Pontos de divergência que persistiram: ' + data.pontos_divergencia;
+          }
+          // Matriz de decisão 2x2 (desejabilidade x exequibilidade), calculada a partir das
+          // posições finais (Rodada 2) — item 5.1 do plano. Só aparece em execuções feitas
+          // depois da migração que adicionou os campos; execuções antigas não têm matriz_decisao.
+          if (data.matriz_decisao) {
+            const md = card.querySelector('.matriz-decisao');
+            md.hidden = false;
+            md.textContent = 'Matriz de decisão: ' + data.matriz_decisao +
+              ' (mediana desejabilidade ' + data.desejabilidade_mediana + ', mediana exequibilidade ' + data.exequibilidade_mediana + ')' +
+              (data.alerta_polarizacao ? ' — grupo dividido nesta rodada, veja as posições individuais abaixo.' : '');
           }
           renderRodadasDetalhe(card, metodo, data);
         }

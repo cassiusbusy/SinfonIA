@@ -402,6 +402,60 @@
     font-size: 12px;
     padding-top: 8px;
   }
+
+  .toolbar {
+    display: flex;
+    justify-content: flex-end;
+  }
+  #btn-exportar-pdf {
+    align-self: auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    font-size: 13.5px;
+  }
+
+  .print-only { display: none; }
+
+  @media print {
+    body { background: #fff; padding: 0; }
+    .page { max-width: 100%; gap: 14px; }
+    .toolbar,
+    nav.tabs,
+    #ask-card,
+    #banco-ask-card,
+    #eval-card,
+    #status,
+    #banco-status,
+    footer { display: none !important; }
+
+    .card {
+      border: 1px solid #ccc;
+      box-shadow: none;
+      break-inside: avoid;
+    }
+
+    button.btn-secondary,
+    #btn-toggle-especialistas,
+    .btn-toggle-rodadas,
+    #btn-toggle-linhas { display: none !important; }
+
+    /* Conteúdo que só aparecia atrás de um toggle deve ficar visível na
+       impressão, já que não há como clicar num botão no papel. */
+    #especialistas-list,
+    .rodadas-detalhe,
+    #banco-rows-wrap { display: block !important; }
+
+    .print-only {
+      display: block;
+      margin: 0 0 4px;
+      font-size: 11px;
+      color: #666;
+    }
+
+    a[href]::after { content: none !important; }
+  }
 </style>
 </head>
 <body>
@@ -411,6 +465,11 @@
       <h1>Painel de Urbanistas 2050</h1>
       <p class="subtitle" id="page-subtitle">Pergunte ao especialista e receba o parecer técnico do painel sobre a revisão do Plano Diretor de Curitiba.</p>
     </header>
+
+    <div class="toolbar">
+      <button id="btn-exportar-pdf" class="btn-secondary" type="button">Exportar PDF</button>
+    </div>
+    <p class="print-only" id="print-timestamp"></p>
 
     <nav class="tabs">
       <button type="button" class="tab active" id="tab-btn-painel">Painel de Urbanistas</button>
@@ -965,6 +1024,18 @@
   }
 
   $('btn-banco-perguntar').addEventListener('click', () => perguntarAoBanco());
+
+  // ---------- Exportar PDF ----------
+  // Usa a impressão nativa do navegador (window.print) com a folha de estilo
+  // @media print acima, que esconde formulários/botões e mostra o conteúdo
+  // dos toggles (respostas dos especialistas, rodadas, linhas do banco) que
+  // normalmente ficam escondidos atrás de um clique — no papel não dá pra
+  // clicar, então tudo que estiver preenchido na tela sai no PDF. O usuário
+  // escolhe "Salvar como PDF" no diálogo de impressão do navegador.
+  $('btn-exportar-pdf').addEventListener('click', () => {
+    $('print-timestamp').textContent = 'Exportado em ' + new Date().toLocaleString('pt-BR');
+    window.print();
+  });
 </script>
 </body>
 </html>

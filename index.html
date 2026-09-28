@@ -4,59 +4,76 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Painel de Urbanistas 2050</title>
+<title>SinfonIA: orquestra de Rags</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;1,9..144,500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=EB+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&family=IM+Fell+English:ital@0;1&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #F4F5F1;
-    --surface: #FFFFFF;
-    --ink: #16213A;
-    --ink-soft: #59626F;
-    --ink-faint: #8A929C;
-    --accent: #E1592A;
-    --accent-soft: #FCE7DD;
-    --border: #DBDED4;
-    --ok: #2F7D5A;
-    --ok-soft: #E4F3EB;
+    --bg: #EFE3C7;
+    --surface: #F8EFDA;
+    --ink: #3B2A1A;
+    --ink-soft: #6B5236;
+    --ink-faint: #9C8664;
+    --accent: #A64B32;
+    --accent-soft: #F1DDC8;
+    --border: #C7B589;
+    --ok: #5B7A4A;
+    --ok-soft: #E3E8D2;
+    --paper-stain-1: rgba(120,90,50,.10);
+    --paper-stain-2: rgba(120,90,50,.08);
+    --paper-highlight: rgba(255,250,235,.45);
+    --paper-fiber: rgba(90,65,35,.035);
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #10151F;
-      --surface: #171F2C;
-      --ink: #E9ECF1;
-      --ink-soft: #A6AFBC;
-      --ink-faint: #6D7684;
-      --accent: #FF7A45;
-      --accent-soft: #3A2418;
-      --border: #2A3242;
-      --ok: #6FCB9C;
-      --ok-soft: #16281F;
+      --bg: #241C13;
+      --surface: #2E2417;
+      --ink: #EDE0C4;
+      --ink-soft: #C7B48C;
+      --ink-faint: #8C7A5C;
+      --accent: #D97A4E;
+      --accent-soft: #4A3420;
+      --border: #4A3B27;
+      --ok: #8FAE72;
+      --ok-soft: #2E3B24;
+      --paper-stain-1: rgba(0,0,0,.28);
+      --paper-stain-2: rgba(0,0,0,.22);
+      --paper-highlight: rgba(255,225,180,.05);
+      --paper-fiber: rgba(255,225,180,.03);
     }
   }
   :root[data-theme="dark"] {
-    --bg: #10151F;
-    --surface: #171F2C;
-    --ink: #E9ECF1;
-    --ink-soft: #A6AFBC;
-    --ink-faint: #6D7684;
-    --accent: #FF7A45;
-    --accent-soft: #3A2418;
-    --border: #2A3242;
-    --ok: #6FCB9C;
-    --ok-soft: #16281F;
+    --bg: #241C13;
+    --surface: #2E2417;
+    --ink: #EDE0C4;
+    --ink-soft: #C7B48C;
+    --ink-faint: #8C7A5C;
+    --accent: #D97A4E;
+    --accent-soft: #4A3420;
+    --border: #4A3B27;
+    --ok: #8FAE72;
+    --ok-soft: #2E3B24;
+    --paper-stain-1: rgba(0,0,0,.28);
+    --paper-stain-2: rgba(0,0,0,.22);
+    --paper-highlight: rgba(255,225,180,.05);
+    --paper-fiber: rgba(255,225,180,.03);
   }
 
   * { box-sizing: border-box; }
   [hidden] { display: none !important; }
   html, body { margin: 0; padding: 0; }
   body {
-    background: var(--bg);
+    background-color: var(--bg);
+    background-image:
+      radial-gradient(ellipse 60% 40% at 15% 8%, var(--paper-stain-1), transparent 60%),
+      radial-gradient(ellipse 55% 40% at 88% 92%, var(--paper-stain-2), transparent 60%),
+      radial-gradient(ellipse 70% 55% at 50% 45%, var(--paper-highlight), transparent 70%),
+      repeating-linear-gradient(115deg, var(--paper-fiber) 0px, var(--paper-fiber) 1px, transparent 1px, transparent 5px);
     color: var(--ink);
-    font-family: "IBM Plex Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+    font-family: "EB Garamond", Georgia, "Times New Roman", serif;
     padding: 40px 16px 64px;
-    line-height: 1.5;
+    line-height: 1.55;
   }
   .page {
     max-width: 620px;
@@ -65,6 +82,70 @@
     flex-direction: column;
     gap: 20px;
   }
+
+  /* ---------- Faixa Vitrúvio (colunas + cordas) ---------- */
+  /* Decorativo, puramente visual: uma colunata clássica cujas alturas seguem
+     razões musicais pitagóricas (1:1, 8:9, 3:4, 2:3, 3:5, 1:2 — uníssono,
+     tom, quarta, quinta, sexta maior, oitava). De um "cravelhame" no canto
+     esquerdo partem cordas até o topo de cada coluna, como uma lira/harpa
+     apoiada na colunata: o comprimento de cada corda é a própria altura da
+     coluna, o mesmo raciocínio que Vitrúvio (De Architectura, Livro V) usa
+     para dizer que o arquiteto precisa entender de música — a harmonia das
+     proporções é a harmonia das cordas. A grade fina por baixo é a folha de
+     prancha técnica (o "blueprint" gregoo); o papel e a tinta sépia são a
+     página de caderno de estudos (a referência ao rascunho de Da Vinci).
+     Sempre no mesmo tom, independente do tema claro/escuro da página (é um
+     "objeto" fixo, como uma folha solta colada sobre a página). aria-hidden
+     na SVG (decorativa); o texto da legenda fica acessível. Sem ids: não
+     interfere em nada do JS existente. */
+  .vitruvius-banner {
+    --marble-1: #F8EFDA;
+    --marble-2: #EFE0BE;
+    --gold: #8C6A3B;
+    --gold-bright: #A64B32;
+    --bronze: #6B5236;
+    --stone-ink: #3B2A1A;
+    margin: 0;
+    background-image:
+      repeating-linear-gradient(0deg, rgba(107,82,54,.09) 0 1px, transparent 1px 22px),
+      repeating-linear-gradient(90deg, rgba(107,82,54,.09) 0 1px, transparent 1px 22px),
+      linear-gradient(135deg, var(--marble-1) 0%, var(--marble-2) 55%, var(--marble-1) 100%);
+    border: 1px solid #CBB98C;
+    border-radius: 4px;
+    padding: 16px 18px 12px;
+  }
+  .vitruvius-banner svg {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+  .vb-pediment { fill: none; stroke: var(--bronze); stroke-width: 1; opacity: .3; }
+  .vb-platform-a { stroke: var(--gold); stroke-width: 1.4; }
+  .vb-platform-b { stroke: var(--bronze); stroke-width: 1; opacity: .6; }
+  .vb-column { fill: var(--marble-1); stroke: var(--gold); stroke-width: 1.4; }
+  .vb-flute { stroke: var(--bronze); stroke-width: .8; opacity: .5; }
+  .vb-string { stroke: var(--gold-bright); stroke-width: 1; }
+  .vb-peg { fill: var(--bronze); }
+  .vb-peg-handle { stroke: var(--bronze); stroke-width: 1.6; stroke-linecap: round; }
+  .vb-pin { fill: var(--gold-bright); }
+  .vb-ratio {
+    fill: var(--stone-ink);
+    font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, monospace;
+    font-size: 9px;
+    text-anchor: middle;
+    opacity: .8;
+  }
+  .vitruvius-caption {
+    margin: 8px 0 0;
+    padding: 0;
+    font-family: "EB Garamond", Georgia, serif;
+    font-size: 12.5px;
+    font-style: italic;
+    color: var(--stone-ink);
+    opacity: .85;
+    text-align: center;
+  }
+
   header {
     display: flex;
     flex-direction: column;
@@ -72,8 +153,8 @@
     padding-bottom: 4px;
   }
   .eyebrow {
-    font-family: "IBM Plex Sans", sans-serif;
-    font-size: 11px;
+    font-family: "EB Garamond", Georgia, serif;
+    font-size: 12.5px;
     font-weight: 600;
     letter-spacing: 0.12em;
     text-transform: uppercase;
@@ -81,9 +162,10 @@
     margin: 0;
   }
   h1 {
-    font-family: "Fraunces", Georgia, serif;
-    font-weight: 600;
-    font-size: clamp(28px, 6vw, 36px);
+    font-family: "IM Fell English", Georgia, serif;
+    font-style: italic;
+    font-weight: 400;
+    font-size: clamp(30px, 6vw, 40px);
     margin: 0;
     text-wrap: balance;
     color: var(--ink);
@@ -98,11 +180,12 @@
   .card {
     background: var(--surface);
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: 6px;
     padding: 22px;
     display: flex;
     flex-direction: column;
     gap: 14px;
+    box-shadow: 1px 2px 6px rgba(59, 42, 26, .07);
   }
 
   .tabs {
@@ -226,21 +309,32 @@
     outline-offset: 1px;
   }
 
+  /* Botões como um carimbo/rótulo de prancha técnica: cantos quase retos e
+     uma sombra rígida (não desfocada) simulando o contorno duplo de uma
+     régua/nanquim, que "descola" da folha ao passar o mouse e "assenta" ao
+     clicar — o mesmo gesto de uma peça de papel, não de um botão de vidro. */
   button {
     font-family: inherit;
     font-size: 15px;
     font-weight: 600;
-    color: #fff;
+    color: var(--surface);
     background: var(--accent);
-    border: none;
-    border-radius: 8px;
+    border: 1px solid var(--ink);
+    border-radius: 3px;
     padding: 11px 18px;
     cursor: pointer;
     align-self: flex-start;
-    transition: opacity 0.15s ease;
+    box-shadow: 1.5px 1.5px 0 rgba(59, 42, 26, .28);
+    transition: opacity 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
   }
-  button:hover { opacity: 0.9; }
-  button:disabled { opacity: 0.5; cursor: default; }
+  button:hover { opacity: 0.92; box-shadow: 2.5px 2.5px 0 rgba(59, 42, 26, .32); transform: translate(-1px, -1px); }
+  button:active { transform: translate(0, 0); box-shadow: 0.5px 0.5px 0 rgba(59, 42, 26, .32); }
+  button:disabled { opacity: 0.5; cursor: default; box-shadow: none; transform: none; }
+
+  #btn-perguntar, #btn-avaliar, #btn-banco-perguntar, button.btn-secondary {
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
 
   #status, #banco-status {
     display: flex;
@@ -421,6 +515,7 @@
   @media print {
     body { background: #fff; padding: 0; }
     .page { max-width: 100%; gap: 14px; }
+    .vitruvius-banner,
     .toolbar,
     nav.tabs,
     #ask-card,
@@ -460,8 +555,90 @@
 </head>
 <body>
   <div class="page">
+    <figure class="vitruvius-banner">
+      <svg viewBox="0 0 640 168" role="img" aria-hidden="true" focusable="false">
+        <!-- frontão sutil ao fundo, atrás do cravelhame -->
+        <polyline class="vb-pediment" points="8,58 70,12 132,58" />
+
+        <!-- plataforma (estilóbata) -->
+        <line class="vb-platform-a" x1="60" y1="138" x2="630" y2="138" />
+        <line class="vb-platform-b" x1="50" y1="143" x2="640" y2="143" />
+
+        <!-- cravelhame da lira, de onde partem as cordas -->
+        <circle class="vb-peg" cx="40" cy="26" r="3.6" />
+        <line class="vb-peg-handle" x1="40" y1="26" x2="53" y2="17" />
+
+        <!-- Coluna 1 — uníssono 1:1, altura 96 -->
+        <line class="vb-string" x1="40" y1="26" x2="110" y2="42" />
+        <circle class="vb-pin" cx="110" cy="42" r="2" />
+        <rect class="vb-column" x="99" y="42" width="22" height="8" />
+        <rect class="vb-column" x="103.5" y="50" width="13" height="76" />
+        <line class="vb-flute" x1="106.5" y1="52" x2="106.5" y2="124" />
+        <line class="vb-flute" x1="110" y1="52" x2="110" y2="124" />
+        <line class="vb-flute" x1="113.5" y1="52" x2="113.5" y2="124" />
+        <rect class="vb-column" x="97" y="126" width="26" height="6" />
+        <text class="vb-ratio" x="110" y="153">1:1</text>
+
+        <!-- Coluna 2 — tom 8:9, altura 85 -->
+        <line class="vb-string" x1="40" y1="26" x2="205" y2="53" />
+        <circle class="vb-pin" cx="205" cy="53" r="2" />
+        <rect class="vb-column" x="194" y="53" width="22" height="8" />
+        <rect class="vb-column" x="198.5" y="61" width="13" height="65" />
+        <line class="vb-flute" x1="201.5" y1="63" x2="201.5" y2="124" />
+        <line class="vb-flute" x1="205" y1="63" x2="205" y2="124" />
+        <line class="vb-flute" x1="208.5" y1="63" x2="208.5" y2="124" />
+        <rect class="vb-column" x="192" y="126" width="26" height="6" />
+        <text class="vb-ratio" x="205" y="153">8:9</text>
+
+        <!-- Coluna 3 — quarta 3:4, altura 72 -->
+        <line class="vb-string" x1="40" y1="26" x2="300" y2="66" />
+        <circle class="vb-pin" cx="300" cy="66" r="2" />
+        <rect class="vb-column" x="289" y="66" width="22" height="8" />
+        <rect class="vb-column" x="293.5" y="74" width="13" height="52" />
+        <line class="vb-flute" x1="296.5" y1="76" x2="296.5" y2="124" />
+        <line class="vb-flute" x1="300" y1="76" x2="300" y2="124" />
+        <line class="vb-flute" x1="303.5" y1="76" x2="303.5" y2="124" />
+        <rect class="vb-column" x="287" y="126" width="26" height="6" />
+        <text class="vb-ratio" x="300" y="153">3:4</text>
+
+        <!-- Coluna 4 — quinta 2:3, altura 64 -->
+        <line class="vb-string" x1="40" y1="26" x2="395" y2="74" />
+        <circle class="vb-pin" cx="395" cy="74" r="2" />
+        <rect class="vb-column" x="384" y="74" width="22" height="8" />
+        <rect class="vb-column" x="388.5" y="82" width="13" height="44" />
+        <line class="vb-flute" x1="391.5" y1="84" x2="391.5" y2="124" />
+        <line class="vb-flute" x1="395" y1="84" x2="395" y2="124" />
+        <line class="vb-flute" x1="398.5" y1="84" x2="398.5" y2="124" />
+        <rect class="vb-column" x="382" y="126" width="26" height="6" />
+        <text class="vb-ratio" x="395" y="153">2:3</text>
+
+        <!-- Coluna 5 — sexta maior 3:5, altura 58 -->
+        <line class="vb-string" x1="40" y1="26" x2="490" y2="80" />
+        <circle class="vb-pin" cx="490" cy="80" r="2" />
+        <rect class="vb-column" x="479" y="80" width="22" height="8" />
+        <rect class="vb-column" x="483.5" y="88" width="13" height="38" />
+        <line class="vb-flute" x1="486.5" y1="90" x2="486.5" y2="124" />
+        <line class="vb-flute" x1="490" y1="90" x2="490" y2="124" />
+        <line class="vb-flute" x1="493.5" y1="90" x2="493.5" y2="124" />
+        <rect class="vb-column" x="477" y="126" width="26" height="6" />
+        <text class="vb-ratio" x="490" y="153">3:5</text>
+
+        <!-- Coluna 6 — oitava 1:2, altura 48 -->
+        <line class="vb-string" x1="40" y1="26" x2="585" y2="90" />
+        <circle class="vb-pin" cx="585" cy="90" r="2" />
+        <rect class="vb-column" x="574" y="90" width="22" height="8" />
+        <rect class="vb-column" x="578.5" y="98" width="13" height="28" />
+        <line class="vb-flute" x1="581.5" y1="100" x2="581.5" y2="124" />
+        <line class="vb-flute" x1="585" y1="100" x2="585" y2="124" />
+        <line class="vb-flute" x1="588.5" y1="100" x2="588.5" y2="124" />
+        <rect class="vb-column" x="572" y="126" width="26" height="6" />
+        <text class="vb-ratio" x="585" y="153">1:2</text>
+      </svg>
+      <figcaption class="vitruvius-caption">Vitrúvio, De Architectura V — o arquiteto precisa entender de cordas: a harmonia das proporções é a harmonia das razões musicais.</figcaption>
+    </figure>
+
     <header>
-      <p class="eyebrow">OrquestraIA — MultipleBrains</p>
+      <p class="eyebrow">SinfonIA: orquestra de Rags</p>
       <h1>Painel de Urbanistas 2050</h1>
       <p class="subtitle" id="page-subtitle">Pergunte ao especialista e receba o parecer técnico do painel sobre a revisão do Plano Diretor de Curitiba.</p>
     </header>
@@ -593,7 +770,7 @@
       </section>
     </div>
 
-    <footer>OrquestraIA · camada de orquestração multi-agente do MultipleBrains</footer>
+    <footer>SinfonIA · camada de orquestração multi-agente do MultipleBrains</footer>
   </div>
 
 <script>
@@ -945,7 +1122,7 @@
     $('tab-btn-banco').classList.toggle('active', !noPainel);
     $('page-subtitle').textContent = noPainel
       ? 'Pergunte ao especialista e receba o parecer técnico do painel sobre a revisão do Plano Diretor de Curitiba.'
-      : 'Pergunte, em português, o que está acontecendo (ou já aconteceu) no banco de dados do OrquestraIA.';
+      : 'Pergunte, em português, o que está acontecendo (ou já aconteceu) no banco de dados do SinfonIA.';
   }
   $('tab-btn-painel').addEventListener('click', () => mostrarAba('painel'));
   $('tab-btn-banco').addEventListener('click', () => mostrarAba('banco'));
@@ -1027,11 +1204,6 @@
 
   // ---------- Exportar PDF ----------
   // Usa a impressão nativa do navegador (window.print) com a folha de estilo
-  // @media print acima, que esconde formulários/botões e mostra o conteúdo
-  // dos toggles (respostas dos especialistas, rodadas, linhas do banco) que
-  // normalmente ficam escondidos atrás de um clique — no papel não dá pra
-  // clicar, então tudo que estiver preenchido na tela sai no PDF. O usuário
-  // escolhe "Salvar como PDF" no diálogo de impressão do navegador.
   $('btn-exportar-pdf').addEventListener('click', () => {
     $('print-timestamp').textContent = 'Exportado em ' + new Date().toLocaleString('pt-BR');
     window.print();

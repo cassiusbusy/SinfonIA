@@ -1,4 +1,3 @@
-
 <!doctype html>
 <html lang="pt-BR">
 <head>
@@ -247,6 +246,36 @@
     font-size: 12px;
     color: var(--ink-soft);
     margin: 0;
+  }
+  .metodo-label-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  .metodo-label-row button.btn-secondary {
+    padding: 4px 12px;
+    font-size: 12px;
+  }
+  .metodos-info {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    background: var(--bg);
+  }
+  .metodos-info .metodo-info-item { display: flex; flex-direction: column; gap: 2px; }
+  .metodos-info .metodo-info-item strong {
+    color: var(--ink);
+    font-size: 13.5px;
+  }
+  .metodos-info .metodo-info-item p {
+    margin: 0;
+    font-size: 13px;
+    color: var(--ink-soft);
   }
 
   .chips { display: flex; flex-wrap: wrap; gap: 8px; }
@@ -545,7 +574,8 @@
        impressão, já que não há como clicar num botão no papel. */
     #especialistas-list,
     .rodadas-detalhe,
-    #banco-rows-wrap { display: block !important; }
+    #banco-rows-wrap,
+    #metodos-info { display: block !important; }
 
     .print-only {
       display: block;
@@ -669,8 +699,25 @@
         </select>
       </div>
       <div class="metodo-row">
-        <label>Métodos disparados por pergunta</label>
+        <div class="metodo-label-row">
+          <label>Métodos disparados por pergunta</label>
+          <button type="button" id="btn-toggle-metodos-info" class="btn-secondary">O que é isso?</button>
+        </div>
         <div class="metodo-buttons" id="metodo-chips"></div>
+        <div class="metodos-info" id="metodos-info" hidden>
+          <div class="metodo-info-item">
+            <strong>MoA (Mixture of Agents)</strong>
+            <p>Cada especialista responde de forma independente e em paralelo, sem ver a resposta dos demais. Um agente orquestrador lê todas as respostas e produz uma única síntese. Uma única rodada — não há debate nem revisão de posição.</p>
+          </div>
+          <div class="metodo-info-item">
+            <strong>Policy Delphi</strong>
+            <p>Rodada 1: cada especialista responde de forma independente. Entre as rodadas, um agente resume os pontos de consenso e de divergência do grupo, de forma anônima. Rodada 2: cada especialista revê sua posição à luz dessa síntese anônima, sem saber quem disse o quê — busca convergência estruturada sem a pressão de um debate aberto.</p>
+          </div>
+          <div class="metodo-info-item">
+            <strong>MAD (Multi-Agent Debate)</strong>
+            <p>Rodada 1: cada especialista responde de forma independente. Rodada 2: os especialistas veem as respostas uns dos outros (não anônimo) e replicam diretamente, com instrução para só mudar de posição diante de um argumento tecnicamente mais forte, não por pressão de maioria. Um LLM juiz avalia a solidez dos argumentos na síntese final, não a contagem de votos.</p>
+          </div>
+        </div>
         <p class="metodo-hint">Uma única pergunta é enviada de uma vez para todos os métodos habilitados abaixo — cada um responde no seu próprio card, assim que terminar (não é preciso escolher um só). Clique em um método para habilitar/desabilitar; a escolha fica salva neste navegador.</p>
       </div>
       <div>
@@ -910,6 +957,12 @@
     $('btn-toggle-especialistas').textContent = list.hidden
       ? 'Ver respostas dos demais especialistas'
       : 'Ocultar respostas dos demais especialistas';
+  });
+
+  $('btn-toggle-metodos-info').addEventListener('click', () => {
+    const info = $('metodos-info');
+    info.hidden = !info.hidden;
+    $('btn-toggle-metodos-info').textContent = info.hidden ? 'O que é isso?' : 'Ocultar explicação dos métodos';
   });
 
   // ---------- Status dos métodos — chips clicáveis, não um seletor de "escolha um" ----------

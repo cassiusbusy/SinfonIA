@@ -1,8 +1,17 @@
+
 <!doctype html>
 <html lang="pt-BR">
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<!-- Google tag (gtag.js) — GA4, fluxo de dados 15891496155 -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-KNT5QN6BW0"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){ dataLayer.push(arguments); }
+  gtag('js', new Date());
+  gtag('config', 'G-KNT5QN6BW0');
+</script>
 <title>SinfonIA: orquestra de Rags</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -711,7 +720,7 @@
           </div>
           <div class="metodo-info-item">
             <strong>Policy Delphi</strong>
-            <p>Rodada 1: cada especialista responde de forma independente. Entre as rodadas, um agente resume os pontos de consenso e de divergência do grupo, de forma anônima. Rodada 2: cada especialista revê sua posição à luz dessa síntese anônima, sem saber quem disse o quê. Busca convergência estruturada sem a pressão de um debate aberto.</p>
+            <p>Rodada 1: cada especialista responde de forma independente. Entre as rodadas, um agente resume os pontos de consenso e de divergência do grupo, de forma anônima. Rodada 2: cada especialista revê sua posição à luz dessa síntese anônima, sem saber quem disse o quê, busca convergência estruturada sem a pressão de um debate aberto.</p>
           </div>
           <div class="metodo-info-item">
             <strong>MAD (Multi-Agent Debate)</strong>
@@ -865,6 +874,16 @@
   let lastRespostaId = null;
   let notaEstrelas = 4; // 1-5 estrelas -> nota 2-10
 
+  // Envia um evento ao GA4 (gtag). Protegido em try/catch e checando se `gtag`
+  // existe: se o script do Analytics falhar em carregar (ad blocker, offline),
+  // o painel continua funcionando normalmente — analytics nunca pode quebrar a
+  // funcionalidade principal.
+  function trackEvent(name, params) {
+    try {
+      if (typeof gtag === 'function') gtag('event', name, params || {});
+    } catch (e) { /* ignora falha de analytics */ }
+  }
+
   function showError(msg) {
     $('error-text').textContent = msg;
     $('error-card').hidden = false;
@@ -957,12 +976,14 @@
     $('btn-toggle-especialistas').textContent = list.hidden
       ? 'Ver respostas dos demais especialistas'
       : 'Ocultar respostas dos demais especialistas';
+    trackEvent('ver_especialistas_toggle', { aberto: !list.hidden });
   });
 
   $('btn-toggle-metodos-info').addEventListener('click', () => {
     const info = $('metodos-info');
     info.hidden = !info.hidden;
     $('btn-toggle-metodos-info').textContent = info.hidden ? 'O que é isso?' : 'Ocultar explicação dos métodos';
+    trackEvent('metodos_info_toggle', { aberto: !info.hidden });
   });
 
   // ---------- Status dos métodos — chips clicáveis, não um seletor de "escolha um" ----------
@@ -983,6 +1004,7 @@
       chip.addEventListener('click', () => {
         METODOS_PRONTOS[m] = !METODOS_PRONTOS[m];
         salvarMetodosProntos();
+        trackEvent('metodo_toggle', { metodo: m, ativo: METODOS_PRONTOS[m] });
         renderMetodoChips();
       });
       wrap.appendChild(chip);
@@ -1068,6 +1090,7 @@
     btn.addEventListener('click', () => {
       detalhe.hidden = !detalhe.hidden;
       btn.textContent = detalhe.hidden ? 'Ver rodadas completas' : 'Ocultar rodadas completas';
+      trackEvent('ver_rodadas_toggle', { metodo, aberto: !detalhe.hidden });
     });
   }
 
@@ -1078,6 +1101,8 @@
 
     const metodosAtivos = Object.keys(METODOS_PRONTOS).filter((m) => METODOS_PRONTOS[m]);
     if (metodosAtivos.length === 0) { showError('Nenhum método está habilitado ainda.'); return; }
+
+    trackEvent('perguntar_especialista', { usuario_id, metodos: metodosAtivos.join(',') });
 
     $('error-card').hidden = true;
     $('answer-card').hidden = true;
@@ -1147,6 +1172,8 @@
     const comentario = $('comentario').value.trim();
     $('btn-avaliar').disabled = true;
 
+    trackEvent('avaliar_resposta', { nota, tem_comentario: comentario.length > 0 });
+
     try {
       const res = await fetch(EVAL_URL, {
         method: 'POST',
@@ -1177,6 +1204,7 @@
     $('page-subtitle').textContent = noPainel
       ? 'Pergunte ao especialista e receba o parecer técnico do painel sobre a revisão do Plano Diretor de Curitiba.'
       : 'Pergunte, em português, o que está acontecendo (ou já aconteceu) no banco de dados do SinfonIA.';
+    trackEvent('tab_change', { aba });
   }
   $('tab-btn-painel').addEventListener('click', () => mostrarAba('painel'));
   $('tab-btn-banco').addEventListener('click', () => mostrarAba('banco'));
@@ -1190,6 +1218,8 @@
   document.querySelectorAll('#banco-chips .chip, #banco-chips-arguicao .chip').forEach((btn) => {
     btn.addEventListener('click', () => {
       $('banco-pergunta').value = btn.dataset.q;
+      const categoria = btn.closest('#banco-chips-arguicao') ? 'arguicao' : 'rapida';
+      trackEvent('pergunta_banco_chip', { categoria, pergunta: btn.textContent.trim() });
       perguntarAoBanco(btn.dataset.q);
     });
   });
@@ -1198,6 +1228,7 @@
     const wrap = $('banco-rows-wrap');
     wrap.hidden = !wrap.hidden;
     $('btn-toggle-linhas').textContent = wrap.hidden ? 'Ver linhas retornadas' : 'Ocultar linhas retornadas';
+    trackEvent('ver_linhas_toggle', { aberto: !wrap.hidden });
   });
 
   function renderTabelaLinhas(linhas) {
@@ -1254,7 +1285,10 @@
     }
   }
 
-  $('btn-banco-perguntar').addEventListener('click', () => perguntarAoBanco());
+  $('btn-banco-perguntar').addEventListener('click', () => {
+    trackEvent('pergunta_banco_livre', { tamanho_pergunta: $('banco-pergunta').value.trim().length });
+    perguntarAoBanco();
+  });
 
   // ---------- Exportar PDF ----------
   // Usa a impressão nativa do navegador (window.print) com a folha de estilo
@@ -1265,6 +1299,7 @@
   // escolhe "Salvar como PDF" no diálogo de impressão do navegador.
   $('btn-exportar-pdf').addEventListener('click', () => {
     $('print-timestamp').textContent = 'Exportado em ' + new Date().toLocaleString('pt-BR');
+    trackEvent('exportar_pdf', {});
     window.print();
   });
 </script>
